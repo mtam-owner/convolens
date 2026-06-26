@@ -214,5 +214,27 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
+# ===========================
+# ConvoLens Project
+# ===========================
+
+# Raw datasets
+data/raw/*
+!data/raw/.gitkeep
+
+# Processed datasets
+data/processed/*
+!data/processed/.gitkeep
+
+# Generated outputs
+outputs/*
+!outputs/.gitkeep
+
+# Streamlit secrets
+.streamlit/secrets.toml
+
+# Environment variables
+.env
+
 # Streamlit
 .streamlit/secrets.toml
