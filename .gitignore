@@ -235,6 +235,7 @@ outputs/*
 
 # Environment variables
 .env
-
+*.egg-info/
+.pytest_cache/
 # Streamlit
 .streamlit/secrets.toml
