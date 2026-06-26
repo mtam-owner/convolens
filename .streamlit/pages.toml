@@ -1,0 +1,11 @@
+[[pages]]
+path = "Home.py"
+name = "Home"
+
+[[pages]]
+path = "pages/page_1.py"
+name = "Executive Dashboard"
+
+[[pages]]
+path = "pages/page_2.py"
+name = "Conversation Explorer"

@@ -230,6 +230,27 @@ data/processed/*
 outputs/*
 !outputs/.gitkeep
 
+# Raw data
+data/raw/*
+!data/raw/.gitkeep
+
+# Processed data
+data/processed/*
+!data/processed/.gitkeep
+
+# Sample data
+data/sample/*
+!data/sample/.gitkeep
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+
+# Virtual environment
+.venv/
+
 # Streamlit secrets
 .streamlit/secrets.toml
 
