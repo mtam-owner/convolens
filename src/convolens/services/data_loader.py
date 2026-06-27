@@ -10,14 +10,18 @@ PROCESSED_DIR = ROOT_DIR / "data" / "processed"
 
 @st.cache_data(show_spinner="Loading conversation data...")
 def load_conversations() -> pd.DataFrame:
-    file_path = PROCESSED_DIR / "conversations.parquet"
+    scored_path = PROCESSED_DIR / "conversations_scored.parquet"
+    base_path = PROCESSED_DIR / "conversations.parquet"
 
-    if not file_path.exists():
-        raise FileNotFoundError(
-            "conversations.parquet was not found in data/processed."
-        )
+    if scored_path.exists():
+        return pd.read_parquet(scored_path)
 
-    return pd.read_parquet(file_path)
+    if base_path.exists():
+        return pd.read_parquet(base_path)
+
+    raise FileNotFoundError(
+        "No conversation dataset found in data/processed."
+    )
 
 
 @st.cache_data(show_spinner="Loading message data...")

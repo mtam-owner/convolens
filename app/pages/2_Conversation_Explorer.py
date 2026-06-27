@@ -81,6 +81,14 @@ with st.sidebar:
         default=[],
     )
 
+    risk_options = ["High", "Medium", "Low"]
+
+    selected_risk_levels = st.multiselect(
+        "Risk level",
+        options=risk_options,
+        default=[],
+    )
+
     search_term = st.text_input("Search conversation text")
 
     min_messages, max_messages = st.slider(
@@ -107,6 +115,9 @@ filtered = conversations[
 if selected_companies:
     filtered = filtered[filtered["company"].isin(selected_companies)]
 
+if selected_risk_levels:
+    filtered = filtered[filtered["risk_level"].isin(selected_risk_levels)]
+
 if search_term:
     filtered = filtered[
         filtered["conversation_text"]
@@ -121,7 +132,14 @@ sort_map = {
     "Most recent": ["start_time", "message_count"],
 }
 
-filtered = filtered.sort_values(sort_map[sort_option], ascending=False)
+if sort_option == "Slowest response":
+    filtered = filtered.sort_values(
+        sort_map[sort_option],
+        ascending=False,
+        na_position="last",
+    )
+else:
+    filtered = filtered.sort_values(sort_map[sort_option], ascending=False)
 
 left, right = st.columns([1.05, 1.4], gap="large")
 
@@ -140,6 +158,8 @@ with left:
         [
             "conversation_id",
             "company",
+            "risk_level",
+            "escalation_score",
             "start_time",
             "message_count",
             "duration_minutes",
@@ -151,17 +171,29 @@ with left:
     queue["response_time"] = queue["response_time_minutes"].apply(
         format_seconds_from_minutes
     )
+    queue["escalation_score"] = queue["escalation_score"].round(3)
 
     display_queue = queue[
         [
             "conversation_id",
             "company",
-            "start_time",
+            "risk_level",
+            "escalation_score",
             "message_count",
             "duration",
             "response_time",
         ]
-    ]
+    ].rename(
+        columns={
+            "conversation_id": "Conversation",
+            "company": "Company",
+            "risk_level": "Risk",
+            "escalation_score": "Score",
+            "message_count": "Messages",
+            "duration": "Duration",
+            "response_time": "Response",
+        }
+    )
 
     st.dataframe(
         display_queue,
@@ -169,18 +201,20 @@ with left:
         hide_index=True,
     )
 
-    selected_id = st.selectbox(
+    selected_id = int(
+    st.selectbox(
         "Select conversation",
         queue["conversation_id"].tolist(),
     )
+    )
 
-selected = filtered[filtered["conversation_id"] == selected_id].iloc[0]
+    selected = filtered[filtered["conversation_id"] == selected_id].iloc[0]
 
-selected_messages = (
-    messages[messages["conversation_id"] == selected_id]
-    .sort_values(["created_at", "tweet_id"])
-    .copy()
-)
+    selected_messages = (
+        messages[messages["conversation_id"] == selected_id]
+        .sort_values(["created_at", "tweet_id"])
+        .copy()
+    )
 
 with right:
     st.subheader("Conversation Detail")
@@ -223,6 +257,78 @@ with right:
         st.markdown('<div class="meta-label">Response Time</div>', unsafe_allow_html=True)
         st.markdown(
             f'<div class="meta-value">{format_seconds_from_minutes(selected["response_time_minutes"])}</div>',
+            unsafe_allow_html=True,
+        )
+
+    st.divider()
+
+    st.subheader("Risk Assessment")
+
+    risk_left, risk_right = st.columns([0.3, 0.7])
+
+    with risk_left:
+        st.markdown(
+            '<div class="meta-label">Risk Level</div>',
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            f'<div class="meta-value">{escape(str(selected["risk_level"]))}</div>',
+            unsafe_allow_html=True,
+        )
+
+        st.markdown(
+            '<div class="meta-label">Escalation Score</div>',
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            f'<div class="meta-value">{float(selected["escalation_score"]):.3f}</div>',
+            unsafe_allow_html=True,
+        )
+
+    with risk_right:
+        st.markdown(
+            '<div class="meta-label">Primary Risk Factors</div>',
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            f'<div class="meta-value">{escape(str(selected["risk_reason"]))}</div>',
+            unsafe_allow_html=True,
+        )
+
+    st.subheader("Investigation Signals")
+
+    sig1, sig2, sig3 = st.columns(3)
+
+    with sig1:
+        complaint_terms = selected.get("complaint_terms", "")
+        st.markdown(
+            '<div class="meta-label">Complaint Terms</div>',
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            f'<div class="meta-value">{escape(str(complaint_terms)) if complaint_terms else "None detected"}</div>',
+            unsafe_allow_html=True,
+        )
+
+    with sig2:
+        urgency_terms = selected.get("urgency_terms", "")
+        st.markdown(
+            '<div class="meta-label">Urgency Terms</div>',
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            f'<div class="meta-value">{escape(str(urgency_terms)) if urgency_terms else "None detected"}</div>',
+            unsafe_allow_html=True,
+        )
+
+    with sig3:
+        escalation_terms = selected.get("escalation_terms", "")
+        st.markdown(
+            '<div class="meta-label">Escalation Terms</div>',
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            f'<div class="meta-value">{escape(str(escalation_terms)) if escalation_terms else "None detected"}</div>',
             unsafe_allow_html=True,
         )
 

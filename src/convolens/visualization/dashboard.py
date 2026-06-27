@@ -123,3 +123,53 @@ def conversation_length_distribution(df: pd.DataFrame):
 
     fig.update_traces(marker={"color": PRIMARY})
     return _apply_chart_style(fig)
+
+def risk_level_distribution(df: pd.DataFrame):
+    risk_order = ["High", "Medium", "Low"]
+
+    risk_counts = (
+        df["risk_level"]
+        .value_counts()
+        .reindex(risk_order)
+        .fillna(0)
+        .reset_index()
+    )
+
+    risk_counts.columns = ["risk_level", "conversations"]
+
+    fig = px.bar(
+        risk_counts,
+        x="risk_level",
+        y="conversations",
+        title="Conversation risk distribution",
+        template=PLOTLY_TEMPLATE,
+    )
+
+    fig.update_traces(marker={"color": PRIMARY})
+    return _apply_chart_style(fig)
+
+def top_high_risk_companies(df: pd.DataFrame, top_n: int = 15):
+    risk_df = df[df["risk_level"] == "High"]
+
+    company_risk = (
+        risk_df.dropna(subset=["company"])
+        .groupby("company")
+        .size()
+        .sort_values(ascending=False)
+        .head(top_n)
+        .reset_index(name="high_risk_conversations")
+    )
+
+    fig = px.bar(
+        company_risk,
+        x="high_risk_conversations",
+        y="company",
+        orientation="h",
+        title="Top companies by high-risk conversations",
+        template=PLOTLY_TEMPLATE,
+    )
+
+    fig.update_traces(marker={"color": PRIMARY})
+    fig = _apply_chart_style(fig)
+    fig.update_yaxes(categoryorder="total ascending")
+    return fig
