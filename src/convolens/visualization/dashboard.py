@@ -57,12 +57,30 @@ def _active_operating_period(df: pd.DataFrame) -> pd.DataFrame:
 def conversation_volume_trend(df: pd.DataFrame):
     daily = _active_operating_period(df)
 
+    df = df.copy()
+
+    df["start_time"] = pd.to_datetime(df["start_time"])
+
+    df = df[df["start_time"] >= "2017-07-01"]
+
+    trend = (
+        df.groupby(
+            pd.Grouper(
+                key="start_time",
+                freq="MS",
+            )
+        )
+        .size()
+        .reset_index(name="conversations")
+    )
+
     fig = px.line(
-        daily,
-        x="date",
+        trend,
+        x="start_time",
         y="conversations",
-        title="Daily conversation volume",
+        markers=True,
         template=PLOTLY_TEMPLATE,
+        title="Monthly conversation volume",
     )
 
     fig.update_traces(line={"color": PRIMARY, "width": 2.2})
@@ -172,4 +190,57 @@ def top_high_risk_companies(df: pd.DataFrame, top_n: int = 15):
     fig.update_traces(marker={"color": PRIMARY})
     fig = _apply_chart_style(fig)
     fig.update_yaxes(categoryorder="total ascending")
+    return fig
+
+def intent_distribution(df: pd.DataFrame):
+    intent_counts = (
+        df["intent"]
+        .value_counts()
+        .reset_index()
+    )
+
+    intent_counts.columns = ["intent", "conversations"]
+
+    fig = px.bar(
+        intent_counts,
+        x="conversations",
+        y="intent",
+        orientation="h",
+        title="Conversation intent distribution",
+        template=PLOTLY_TEMPLATE,
+    )
+
+    fig.update_traces(marker={"color": PRIMARY})
+
+    fig = _apply_chart_style(fig)
+    fig.update_yaxes(categoryorder="total ascending")
+
+    return fig
+
+def top_company_by_intent(df: pd.DataFrame):
+    company_intent = (
+        df.groupby(["company", "intent"])
+        .size()
+        .reset_index(name="conversations")
+    )
+
+    company_intent = (
+        company_intent
+        .sort_values("conversations", ascending=False)
+        .head(20)
+    )
+
+    fig = px.bar(
+        company_intent,
+        x="conversations",
+        y="company",
+        color="intent",
+        orientation="h",
+        title="Top company / intent combinations",
+        template=PLOTLY_TEMPLATE,
+    )
+
+    fig = _apply_chart_style(fig)
+    fig.update_yaxes(categoryorder="total ascending")
+
     return fig

@@ -12,6 +12,8 @@ from convolens.visualization.dashboard import (
     risk_level_distribution,
     top_companies_chart,
     top_high_risk_companies,
+    intent_distribution,
+    top_company_by_intent,
 )
 
 
@@ -71,6 +73,13 @@ with st.sidebar:
         default=[],
     )
 
+    intent_options = sorted(conversations["intent"].dropna().unique())
+
+    selected_intents = st.multiselect(
+        "Intent",
+        options=intent_options,
+    )
+
     min_messages = st.slider(
         "Minimum messages",
         min_value=1,
@@ -85,6 +94,11 @@ if selected_companies:
 
 if selected_risk_levels:
     filtered = filtered[filtered["risk_level"].isin(selected_risk_levels)]
+
+if selected_intents:
+    filtered = filtered[
+        filtered["intent"].isin(selected_intents)
+    ]
 
 st.subheader("Operational Overview")
 
@@ -167,6 +181,24 @@ st.plotly_chart(
 
 st.divider()
 
+st.subheader("Conversation Intent")
+
+left, right = st.columns(2)
+
+with left:
+    st.plotly_chart(
+        intent_distribution(filtered),
+        use_container_width=True,
+    )
+
+with right:
+    st.plotly_chart(
+        top_company_by_intent(filtered),
+        use_container_width=True,
+    )
+
+st.divider()
+
 st.subheader("Operational Attention")
 
 attention = (
@@ -179,6 +211,7 @@ attention = (
         [
             "conversation_id",
             "company",
+            "intent",
             "risk_level",
             "escalation_score",
             "risk_reason",
@@ -200,6 +233,7 @@ attention = attention[
     [
         "conversation_id",
         "company",
+        "intent",
         "risk_level",
         "escalation_score",
         "risk_reason",
@@ -212,6 +246,7 @@ attention = attention[
 attention.columns = [
     "Conversation ID",
     "Company",
+    "Intent",
     "Risk Level",
     "Escalation Score",
     "Risk Reason",

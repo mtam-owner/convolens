@@ -33,7 +33,11 @@ def format_seconds_from_minutes(value) -> str:
 
 def render_message(author: str, timestamp, text: str, inbound: bool) -> None:
     css_class = "customer" if inbound else "company"
-    speaker = "Customer" if inbound else "Support"
+    speaker = (
+        "Customer"
+        if inbound
+        else str(author).replace("_", " ").title()
+    )
 
     if pd.isna(timestamp):
         time_display = ""
@@ -44,7 +48,7 @@ def render_message(author: str, timestamp, text: str, inbound: bool) -> None:
         f"""
         <div class="message-block {css_class}">
             <div class="message-header">
-                <div class="message-author">{speaker} · {escape(str(author))}</div>
+                <div class="message-author">{speaker}</div>
                 <div class="message-time">{escape(time_display)}</div>
             </div>
             <div class="message-body">{escape(str(text))}</div>
@@ -89,6 +93,15 @@ with st.sidebar:
         default=[],
     )
 
+    intent_options = sorted(
+    conversations["intent"].dropna().unique()
+    )
+
+    selected_intents = st.multiselect(
+        "Intent",
+        options=intent_options,
+    )
+
     search_term = st.text_input("Search conversation text")
 
     min_messages, max_messages = st.slider(
@@ -117,6 +130,11 @@ if selected_companies:
 
 if selected_risk_levels:
     filtered = filtered[filtered["risk_level"].isin(selected_risk_levels)]
+
+if selected_intents:
+    filtered = filtered[
+        filtered["intent"].isin(selected_intents)
+    ]
 
 if search_term:
     filtered = filtered[
@@ -158,6 +176,7 @@ with left:
         [
             "conversation_id",
             "company",
+            "intent",
             "risk_level",
             "escalation_score",
             "start_time",
@@ -177,6 +196,7 @@ with left:
         [
             "conversation_id",
             "company",
+            "intent",
             "risk_level",
             "escalation_score",
             "message_count",
@@ -187,6 +207,7 @@ with left:
         columns={
             "conversation_id": "Conversation",
             "company": "Company",
+            "intent": "Intent",
             "risk_level": "Risk",
             "escalation_score": "Score",
             "message_count": "Messages",
@@ -231,6 +252,16 @@ with right:
         st.markdown('<div class="meta-label">Customer ID</div>', unsafe_allow_html=True)
         st.markdown(
             f'<div class="meta-value">{escape(str(selected["customer_id"]))}</div>',
+            unsafe_allow_html=True,
+        )
+
+        st.markdown(
+            '<div class="meta-label">Intent</div>',
+            unsafe_allow_html=True,
+        )
+
+        st.markdown(
+            f'<div class="meta-value">{escape(str(selected["intent"]))}</div>',
             unsafe_allow_html=True,
         )
 
@@ -332,7 +363,12 @@ with right:
             unsafe_allow_html=True,
         )
 
-    st.markdown("#### Conversation Transcript")
+    st.markdown("#### Conversation Timeline")
+
+    st.markdown(
+        '<div class="section-caption">Chronological message sequence between customer and support agent</div>',
+        unsafe_allow_html=True,
+    )
 
     for row in selected_messages.itertuples(index=False):
         render_message(
