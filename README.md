@@ -19,6 +19,7 @@ The platform demonstrates how conversational data can support decision-making ac
 ## Features
 
 ### Executive Dashboard
+![Executive Dashboard](images/readme/convo_page1.png)
 
 Monitor customer support operations through executive-level KPIs and trend analysis.
 
@@ -32,6 +33,7 @@ Monitor customer support operations through executive-level KPIs and trend analy
 ---
 
 ### Conversation Explorer
+![Conversation Explorer](images/readme/convo_page2.png)
 
 Investigate individual customer conversations.
 
@@ -45,6 +47,7 @@ Investigate individual customer conversations.
 ---
 
 ### Conversation Intelligence
+![Conversation Intelligence](images/readme/convo_page3.png)
 
 Identify business-wide customer support patterns.
 
@@ -57,6 +60,7 @@ Identify business-wide customer support patterns.
 ---
 
 ### AI Workspace
+![AI Workspace](images/readme/convo_page4.png)
 
 Prototype AI-assisted support analysis.
 
