@@ -193,3 +193,9 @@ hr {
     line-height: 1.45;
     white-space: pre-wrap;
 }
+
+/* AI confidence bar */
+
+.stProgress > div > div > div > div {
+    background-color: #2E8B57 !important;
+}

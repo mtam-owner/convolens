@@ -27,7 +27,7 @@ load_css()
 
 st.title("AI Workspace")
 st.markdown(
-    '<div class="section-caption">AI-assisted conversation interpretation and recommended support actions</div>',
+    '<div class="section-caption">Prototype workspace for AI-assisted conversation interpretation and support recommendations</div>',
     unsafe_allow_html=True,
 )
 
@@ -58,12 +58,12 @@ filtered = filtered.sort_values(
     ascending=False,
 )
 
-left, right = st.columns([1, 1.3], gap="large")
+left, right = st.columns([1, 1.35], gap="large")
 
 with left:
-    st.subheader("Conversation Queue")
+    st.subheader("Review Queue")
     st.markdown(
-        f'<div class="section-caption">{len(filtered):,} conversations available for AI review</div>',
+        f'<div class="section-caption">{len(filtered):,} conversations available for AI-assisted review</div>',
         unsafe_allow_html=True,
     )
 
@@ -110,9 +110,9 @@ selected = filtered[filtered["conversation_id"] == selected_id].iloc[0]
 analysis = analyse_conversation(selected)
 
 with right:
-    st.subheader("AI Analysis")
+    st.subheader("AI-Assisted Interpretation")
 
-    st.markdown("#### Conversation Summary")
+    st.markdown("#### Summary")
     st.write(analysis["summary"])
 
     st.markdown("#### Customer Sentiment")
@@ -124,14 +124,64 @@ with right:
     st.markdown("#### Suggested Next Action")
     st.write(analysis["suggested_action"])
 
-    st.markdown("#### Confidence")
-    st.progress(analysis["confidence"])
+    confidence = analysis["confidence"]
+
+    st.markdown("#### Analysis Confidence")
+
+    left, right = st.columns([5, 1])
+
+    with left:
+        st.progress(confidence)
+
+    with right:
+        st.markdown(
+            f"""
+            <div style="
+                text-align:right;
+                font-size:20px;
+                font-weight:600;
+                margin-top:2px;">
+                {confidence:.0%}
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
     st.divider()
 
-    st.subheader("Source Context")
+    st.subheader("Conversation Context")
 
-    st.markdown(f"**Company:** {selected['company']}")
-    st.markdown(f"**Intent:** {selected['intent']}")
-    st.markdown(f"**Risk Level:** {selected['risk_level']}")
-    st.markdown(f"**Risk Reason:** {selected['risk_reason']}")
+    context1, context2, context3 = st.columns(3)
+
+    with context1:
+        st.markdown("**Company**")
+        st.write(selected["company"])
+
+    with context2:
+        st.markdown("**Intent**")
+        st.write(selected["intent"])
+
+    with context3:
+        st.markdown("**Risk Level**")
+        st.write(selected["risk_level"])
+
+    st.markdown("**Risk Reason**")
+    st.write(selected["risk_reason"])
+
+    st.markdown("**Conversation Text**")
+    st.text_area(
+        "Source conversation",
+        selected["conversation_text"],
+        height=260,
+        label_visibility="collapsed",
+    )
+
+    st.divider()
+
+    st.subheader("Implementation Note")
+    st.info(
+        "This portfolio version uses a local rule-based AI analysis layer. "
+        "In a production deployment, the functions in `src/convolens/features/ai_analysis.py` "
+        "can be replaced with an enterprise LLM provider such as Azure OpenAI, OpenAI, Gemini, "
+        "Claude, or an internal model. No API keys or external calls are included in this public demo."
+    )
